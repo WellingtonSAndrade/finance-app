@@ -1,3 +1,4 @@
 # 🐍 Python (image-analyzer)
 .venv/
 .env
+__pycache__/

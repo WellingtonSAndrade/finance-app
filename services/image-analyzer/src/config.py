@@ -11,7 +11,6 @@ class Config:
     def __init__(self):
         self.gemini_api_key = self._get("GEMINI_API_KEY")
         self.ocr_languages = self._get("OCR_LANGUAGES")
-        self.gpu_enabled = self._get("GPU_ENABLED", default=True)
         self.model_name = self._get("MODEL_NAME")
 
     def _get(self, name, default=None):

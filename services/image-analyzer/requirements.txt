@@ -1,2 +1,4 @@
-dotenv,
+dotenv
 easyocr
+fastapi
+google-genai

@@ -12,7 +12,7 @@ COPY requirements.txt .
 RUN pip install --prefix=/install --no-cache-dir -r requirements.txt \
     --extra-index-url https://download.pytorch.org/whl/cpu
 
-COPY src/ /app
+COPY src/ /app/src
 
 # Stage run
 FROM python:3.11-slim
@@ -24,4 +24,4 @@ COPY --from=build /app /app
 
 EXPOSE 5000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000"]

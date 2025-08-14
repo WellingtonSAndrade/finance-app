@@ -1,0 +1,9 @@
+services:
+  analyzer-service:
+    build: ./services/image-analyzer
+    
+    env_file:
+    - ./services/image-analyzer/.env
+    
+    ports:
+    - "5000:5000"

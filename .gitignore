@@ -3,3 +3,8 @@
 .env
 __pycache__/
 .pytest_cache
+
+# ☕ Java (finance-api)
+.idea
+target/
+help.md

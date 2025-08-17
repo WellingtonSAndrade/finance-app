@@ -1,4 +1,4 @@
-package com.pagar.finance_api.controllers;
+package com.pagar.finance_api.api.controllers;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;

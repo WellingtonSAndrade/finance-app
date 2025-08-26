@@ -28,7 +28,7 @@ public class ResourceServerConfig {
                 .requestCache(Customizer.withDefaults())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
-                                .jwkSetUri(issuer + "oauth2/jwks")
+                                .jwkSetUri(issuer + "/oauth2/jwks")
                         )
                 );
 

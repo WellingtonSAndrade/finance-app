@@ -37,7 +37,7 @@
         @Value("${app.oauth2.post-logout-uri:http://127.0.0.1:8080/}")
         private String postLogoutUri;
 
-        @Value("${app.issuer:http://localhost:8080}")
+        @Value("${app.oauth2.issuer:http://localhost:8080}")
         private String issuer;
 
         @Value("${app.oauth2.client-id:finance-client}")

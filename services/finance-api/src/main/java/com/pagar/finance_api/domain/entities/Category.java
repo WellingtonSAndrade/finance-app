@@ -16,6 +16,7 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    private String cnae;
     private String name;
 
     @OneToMany(mappedBy = "category")

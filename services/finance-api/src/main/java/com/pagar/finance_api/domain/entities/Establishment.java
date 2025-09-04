@@ -16,4 +16,9 @@ public class Establishment {
     private UUID id;
     private String cnpj;
     private String name;
+    private String fantasy;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category mainActivity;
 }

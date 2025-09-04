@@ -21,18 +21,18 @@ public class ExpenseService {
 
     private final LoggedUserService loggedUserService;
     private final CardRepository cardRepository;
-    private final EstablishmentRepository establishmentRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
+    private final EstablishmentService establishmentService;
 
-    public ExpenseService(LoggedUserService loggedUserService, CardRepository cardRepository, EstablishmentRepository establishmentRepository, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository) {
+    public ExpenseService(LoggedUserService loggedUserService, CardRepository cardRepository, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService) {
         this.loggedUserService = loggedUserService;
         this.cardRepository = cardRepository;
-        this.establishmentRepository = establishmentRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.expenseRepository = expenseRepository;
+        this.establishmentService = establishmentService;
     }
 
     @Transactional
@@ -40,9 +40,14 @@ public class ExpenseService {
         UUID userId = loggedUserService.getLoggedUserId();
 
         Card card = getCard(dto.cardId(), userId);
-        Establishment establishment = getEstablishment(dto.establishmentId());
-        Category category = getCategory(dto.categoryId());
+        Establishment establishment = establishmentService.findOrCreateByCnpj(dto.establishmentCnpj());
 
+        Category category;
+        if (dto.categoryId() != null) {
+            category = getCategory(dto.categoryId());
+        } else {
+            category = establishment.getMainActivity();
+        }
         Expense expense = dto.toEntity();
         expense.setUser(userRepository.getReferenceById(userId));
         expense.setCard(card);
@@ -78,8 +83,8 @@ public class ExpenseService {
             Card card = getCard(dto.cardId(), userId);
             expense.setCard(card);
         }
-        if (dto.establishmentId() != null) {
-            Establishment establishment = getEstablishment(dto.establishmentId());
+        if (dto.establishmentCnpj() != null) {
+            Establishment establishment = establishmentService.findOrCreateByCnpj(dto.establishmentCnpj());
             expense.setEstablishment(establishment);
         }
         if (dto.categoryId() != null) {
@@ -102,10 +107,6 @@ public class ExpenseService {
 
     private Category getCategory(UUID categoryId) {
         return categoryRepository.findById(categoryId).orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + categoryId));
-    }
-
-    private Establishment getEstablishment(UUID establishmentId) {
-        return establishmentRepository.findById(establishmentId).orElseThrow(() -> new ResourceNotFoundException("Establishment not found with ID: " + establishmentId));
     }
 
     private Card getCard(UUID cardId, UUID userId) {

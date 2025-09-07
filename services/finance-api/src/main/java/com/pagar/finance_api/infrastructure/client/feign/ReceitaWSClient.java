@@ -1,4 +1,4 @@
-package com.pagar.finance_api.infrastructure.client;
+package com.pagar.finance_api.infrastructure.client.feign;
 
 import com.pagar.finance_api.infrastructure.dto.ReceitaWSResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;

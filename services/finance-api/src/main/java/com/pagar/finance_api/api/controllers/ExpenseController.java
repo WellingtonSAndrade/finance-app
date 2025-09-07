@@ -6,6 +6,7 @@ import com.pagar.finance_api.api.dto.ExpenseResponseDTO;
 import com.pagar.finance_api.core.services.ExpenseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -30,6 +31,11 @@ public class ExpenseController {
         return ResponseEntity.created(uri).body(response);
     }
 
+    @PostMapping(value = "/upload")
+    public ResponseEntity<String> insertFromUpload(@RequestParam MultipartFile file) {
+        String response = expenseService.insertFromUpload(file);
+        return ResponseEntity.status(201).body(response);
+    }
 
     @GetMapping
     public ResponseEntity<List<ExpenseResponseDTO>> findByFilters(@ModelAttribute ExpenseFilterDTO dto) {

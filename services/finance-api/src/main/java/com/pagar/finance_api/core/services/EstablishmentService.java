@@ -5,7 +5,7 @@ import com.pagar.finance_api.domain.entities.Category;
 import com.pagar.finance_api.domain.entities.Establishment;
 import com.pagar.finance_api.domain.repositories.CategoryRepository;
 import com.pagar.finance_api.domain.repositories.EstablishmentRepository;
-import com.pagar.finance_api.infrastructure.client.ReceitaWSClient;
+import com.pagar.finance_api.infrastructure.client.feign.ReceitaWSClient;
 import com.pagar.finance_api.infrastructure.dto.ReceitaWSResponseDTO;
 import feign.FeignException;
 import org.springframework.stereotype.Service;

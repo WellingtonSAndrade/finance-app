@@ -10,8 +10,10 @@ import com.pagar.finance_api.domain.entities.Category;
 import com.pagar.finance_api.domain.entities.Establishment;
 import com.pagar.finance_api.domain.entities.Expense;
 import com.pagar.finance_api.domain.repositories.*;
+import com.pagar.finance_api.infrastructure.client.storage.StorageClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,20 +21,25 @@ import java.util.UUID;
 @Service
 public class ExpenseService {
 
+    private static final List<String> ALLOWED_TYPES = List.of("image/jpg", "image/png");
+    private static final long MAX_SIZE = 5 << 20;
+
     private final LoggedUserService loggedUserService;
     private final CardRepository cardRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
     private final EstablishmentService establishmentService;
+    private final StorageClient storageClient;
 
-    public ExpenseService(LoggedUserService loggedUserService, CardRepository cardRepository, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService) {
+    public ExpenseService(LoggedUserService loggedUserService, CardRepository cardRepository, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService, StorageClient storageClient) {
         this.loggedUserService = loggedUserService;
         this.cardRepository = cardRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.expenseRepository = expenseRepository;
         this.establishmentService = establishmentService;
+        this.storageClient = storageClient;
     }
 
     @Transactional
@@ -55,6 +62,20 @@ public class ExpenseService {
         expense.setCategory(category);
 
         return ExpenseResponseDTO.fromEntity(expenseRepository.save(expense));
+    }
+
+    public String insertFromUpload(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("InvalidFileTypeException");
+        }
+        if (!ALLOWED_TYPES.contains(file.getContentType())) {
+            throw new IllegalArgumentException("FileTooLargeException");
+        }
+        if (file.getSize() > MAX_SIZE) {
+            throw new IllegalArgumentException("");
+        }
+
+        return storageClient.upload(file);
     }
 
     public List<ExpenseResponseDTO> findByFilters(ExpenseFilterDTO filter) {

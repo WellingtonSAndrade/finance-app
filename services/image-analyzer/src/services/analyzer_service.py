@@ -1,7 +1,4 @@
 '''Handles image analysis using OCR and LLM services.'''
-from io import BytesIO
-from fastapi import UploadFile
-from PIL import Image
 from jsonschema import ValidationError
 from src.infrastructure.ocr_service import OCRService
 from src.infrastructure.llm_service import LLMService
@@ -15,13 +12,10 @@ class AnalyzerService:
         self.llm = llm_service
         self.prompt = PromptTemplate()
 
-    async def analyze_image(self, file: UploadFile):
+    def analyze_image(self, file_path: str):
         '''Extracts text from an image, sends it to LLM, and validates the returned JSON.'''
         try:
-            image_bytes = await file.read()
-            image = Image.open(BytesIO(image_bytes))
-
-            extracted_text = self.ocr.extract_text(image)
+            extracted_text = self.ocr.extract_text(file_path)
 
             prompt = self.prompt.build(extracted_text)
 

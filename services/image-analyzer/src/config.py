@@ -12,6 +12,10 @@ class Config:
         self.gemini_api_key = self._get("GEMINI_API_KEY")
         self.ocr_languages = self._get("OCR_LANGUAGES")
         self.model_name = self._get("MODEL_NAME")
+        self.rabbit_host = self._get("RABBIT_HOST")
+        self.rabbit_user = self._get("RABBIT_USER")
+        self.rabbit_password = self._get("RABBIT_PASSWORD")
+        self.queue_name = self._get("QUEUE_NAME")
 
     def _get(self, name, default=None):
         value = os.getenv(name, default)

@@ -3,14 +3,23 @@ package com.pagar.finance_api.core.services;
 import com.pagar.finance_api.api.dto.ExpenseFilterDTO;
 import com.pagar.finance_api.api.dto.ExpenseRequestDTO;
 import com.pagar.finance_api.api.dto.ExpenseResponseDTO;
+import com.pagar.finance_api.api.dto.OcrRequestDTO;
+import com.pagar.finance_api.core.exceptions.EmptyFileException;
+import com.pagar.finance_api.core.exceptions.FileTooLargeException;
+import com.pagar.finance_api.core.exceptions.InvalidFileTypeException;
 import com.pagar.finance_api.core.exceptions.ResourceNotFoundException;
 import com.pagar.finance_api.core.security.user.LoggedUserService;
 import com.pagar.finance_api.domain.entities.Card;
 import com.pagar.finance_api.domain.entities.Category;
 import com.pagar.finance_api.domain.entities.Establishment;
 import com.pagar.finance_api.domain.entities.Expense;
-import com.pagar.finance_api.domain.repositories.*;
+import com.pagar.finance_api.domain.repositories.CardRepository;
+import com.pagar.finance_api.domain.repositories.CategoryRepository;
+import com.pagar.finance_api.domain.repositories.ExpenseRepository;
+import com.pagar.finance_api.domain.repositories.UserRepository;
+import com.pagar.finance_api.infrastructure.client.rabbit.OcrRequestPublisher;
 import com.pagar.finance_api.infrastructure.client.storage.StorageClient;
+import com.pagar.finance_api.infrastructure.dto.OcrMessageDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,8 +40,9 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final EstablishmentService establishmentService;
     private final StorageClient storageClient;
+    private final OcrRequestPublisher ocrRequestPublisher;
 
-    public ExpenseService(LoggedUserService loggedUserService, CardRepository cardRepository, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService, StorageClient storageClient) {
+    public ExpenseService(LoggedUserService loggedUserService, CardRepository cardRepository, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService, StorageClient storageClient, OcrRequestPublisher ocrRequestPublisher) {
         this.loggedUserService = loggedUserService;
         this.cardRepository = cardRepository;
         this.categoryRepository = categoryRepository;
@@ -40,6 +50,7 @@ public class ExpenseService {
         this.expenseRepository = expenseRepository;
         this.establishmentService = establishmentService;
         this.storageClient = storageClient;
+        this.ocrRequestPublisher = ocrRequestPublisher;
     }
 
     @Transactional
@@ -64,18 +75,23 @@ public class ExpenseService {
         return ExpenseResponseDTO.fromEntity(expenseRepository.save(expense));
     }
 
-    public String insertFromUpload(MultipartFile file) {
+    public OcrRequestDTO insertFromUpload(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("InvalidFileTypeException");
+            throw new EmptyFileException();
         }
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
-            throw new IllegalArgumentException("FileTooLargeException");
+            throw new InvalidFileTypeException(file.getContentType());
         }
         if (file.getSize() > MAX_SIZE) {
-            throw new IllegalArgumentException("");
+            throw new FileTooLargeException(file.getSize(), MAX_SIZE);
         }
 
-        return storageClient.upload(file);
+        String taskId = String.valueOf(UUID.randomUUID());
+        String imageUrl = storageClient.upload(file);
+
+        ocrRequestPublisher.send(new OcrMessageDTO(taskId, imageUrl));
+
+        return new OcrRequestDTO(taskId, imageUrl);
     }
 
     public List<ExpenseResponseDTO> findByFilters(ExpenseFilterDTO filter) {

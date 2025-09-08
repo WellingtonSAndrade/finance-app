@@ -3,6 +3,7 @@ package com.pagar.finance_api.api.controllers;
 import com.pagar.finance_api.api.dto.ExpenseFilterDTO;
 import com.pagar.finance_api.api.dto.ExpenseRequestDTO;
 import com.pagar.finance_api.api.dto.ExpenseResponseDTO;
+import com.pagar.finance_api.api.dto.OcrRequestDTO;
 import com.pagar.finance_api.core.services.ExpenseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +33,8 @@ public class ExpenseController {
     }
 
     @PostMapping(value = "/upload")
-    public ResponseEntity<String> insertFromUpload(@RequestParam MultipartFile file) {
-        String response = expenseService.insertFromUpload(file);
+    public ResponseEntity<OcrRequestDTO> insertFromUpload(@RequestParam MultipartFile file) {
+        OcrRequestDTO response = expenseService.insertFromUpload(file);
         return ResponseEntity.status(201).body(response);
     }
 

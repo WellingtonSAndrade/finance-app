@@ -29,5 +29,4 @@ class AnalyzerService:
         except ValueError as e:
             return {"error": f"Failed to extract JSON: {str(e)}"}
         except ValidationError as e:
-            print(data)
             return {"error": f"Invalid JSON structure: {e.message}"}

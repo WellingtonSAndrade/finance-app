@@ -1,4 +1,4 @@
-fastapi
+pika
 uvicorn
 easyocr
 Pillow
@@ -7,4 +7,3 @@ google-genai
 jsonschema
 torch==2.8.0
 torchvision==0.23.0
-python-multipart

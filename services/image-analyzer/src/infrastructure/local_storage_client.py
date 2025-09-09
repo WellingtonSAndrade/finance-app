@@ -8,7 +8,7 @@ class LocalStorageClient:
         self.temp_dir = "temp"
         os.makedirs(self.temp_dir, exist_ok=True)
 
-        self.base_dir = os.path.abspath(os.path.join(__file__, "..", "..", "..", "..", ".."))
+        self.base_dir = "/app/"
 
     def download(self, image_url: str, task_id: str) -> str:
         """copies the image from the uploads folder to temp and returns the local path"""

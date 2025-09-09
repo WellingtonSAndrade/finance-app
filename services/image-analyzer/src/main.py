@@ -9,12 +9,16 @@ from src.infrastructure.llm_service import LLMService
 from src.services.analyzer_service import AnalyzerService
 from src.infrastructure.local_storage_client import LocalStorageClient
 from src.infrastructure.rabbitmq_consumer import RabbitMQConsumer
+from src.infrastructure.rabbitmq_publisher import RabbitMQProducer
 
 config = Config()
+
 ocr_service = OCRService(config)
 llm_service = LLMService(config)
 analyzer_service = AnalyzerService(ocr_service, llm_service)
-local_storage_client = LocalStorageClient()
 
-consumer = RabbitMQConsumer(config, local_storage_client, analyzer_service)
+local_storage_client = LocalStorageClient()
+producer = RabbitMQProducer(config)
+
+consumer = RabbitMQConsumer(config, local_storage_client, analyzer_service, producer)
 consumer.start()

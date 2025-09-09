@@ -1,12 +1,12 @@
 services:
-#  analyzer-service:
-#    build: ./services/image-analyzer
-#    
-#    env_file:
-#    - ./services/image-analyzer/.env
-#    
-#    ports:
-#    - "5000:5000"
+  analyzer-service:
+    build: ./services/image-analyzer    
+    env_file:
+    - ./services/image-analyzer/.env  
+    ports:
+    - "5000:5000"
+    volumes:
+    - ./uploads:/app/uploads
 
   rabbitmq:
     image: rabbitmq:3.7.8-management

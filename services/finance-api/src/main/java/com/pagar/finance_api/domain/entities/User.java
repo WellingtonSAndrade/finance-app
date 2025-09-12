@@ -34,6 +34,9 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
+    @OneToMany(mappedBy = "user")
+    private List<OcrAnalyzer> analyzers = new ArrayList<>();
+
     public void addRole(Role role) {
         roles.add(role);
     }

@@ -30,20 +30,19 @@ class RabbitMQProducer:
             routing_key=self.routing_key_response
         )
 
-    def publish(self, task_id: str, receipt_schema: dict):
+    def publish(self, task_id: str, receipt_schema: dict, user_id: str):
         """Send receipt data with task ID."""
         payload = {
             "task_id": task_id,
+            "user_id": user_id,
             "receipt_schema": receipt_schema
         }
-        print("enviando")
         self.channel.basic_publish(
             exchange=self.exchange,
             routing_key=self.routing_key_response,
             body=json.dumps(payload),
             properties=pika.BasicProperties(delivery_mode=2)
         )
-        print("Enviado========\n\n\n\n\n")
 
     def close(self):
         """Close RabbitMQ connection."""

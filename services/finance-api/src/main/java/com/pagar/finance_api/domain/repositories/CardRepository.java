@@ -14,4 +14,6 @@ public interface CardRepository extends JpaRepository<Card, UUID> {
     List<Card> findByUserId(UUID userId);
 
     Optional<Card> findByIdAndUserId(UUID uuid, UUID userId);
+
+    Optional<Card> findByLastDigitsAndUserId(String lastDigits, UUID userId);
 }

@@ -3,26 +3,13 @@ package com.pagar.finance_api.core.services;
 import com.pagar.finance_api.api.dto.ExpenseFilterDTO;
 import com.pagar.finance_api.api.dto.ExpenseRequestDTO;
 import com.pagar.finance_api.api.dto.ExpenseResponseDTO;
-import com.pagar.finance_api.api.dto.OcrRequestDTO;
-import com.pagar.finance_api.core.exceptions.EmptyFileException;
-import com.pagar.finance_api.core.exceptions.FileTooLargeException;
-import com.pagar.finance_api.core.exceptions.InvalidFileTypeException;
+import com.pagar.finance_api.core.dto.ReceiptSchemaDTO;
 import com.pagar.finance_api.core.exceptions.ResourceNotFoundException;
 import com.pagar.finance_api.core.security.user.LoggedUserService;
-import com.pagar.finance_api.domain.entities.Card;
-import com.pagar.finance_api.domain.entities.Category;
-import com.pagar.finance_api.domain.entities.Establishment;
-import com.pagar.finance_api.domain.entities.Expense;
-import com.pagar.finance_api.domain.repositories.CardRepository;
-import com.pagar.finance_api.domain.repositories.CategoryRepository;
-import com.pagar.finance_api.domain.repositories.ExpenseRepository;
-import com.pagar.finance_api.domain.repositories.UserRepository;
-import com.pagar.finance_api.infrastructure.client.rabbit.OcrRequestPublisher;
-import com.pagar.finance_api.infrastructure.client.storage.StorageClient;
-import com.pagar.finance_api.infrastructure.dto.OcrMessageDTO;
+import com.pagar.finance_api.domain.entities.*;
+import com.pagar.finance_api.domain.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,27 +17,23 @@ import java.util.UUID;
 @Service
 public class ExpenseService {
 
-    private static final List<String> ALLOWED_TYPES = List.of("image/jpg", "image/png");
-    private static final long MAX_SIZE = 5 << 20;
-
     private final LoggedUserService loggedUserService;
     private final CardRepository cardRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
     private final EstablishmentService establishmentService;
-    private final StorageClient storageClient;
-    private final OcrRequestPublisher ocrRequestPublisher;
+    private final OcrAnalyzerRepository ocrAnalyzerRepository;
 
-    public ExpenseService(LoggedUserService loggedUserService, CardRepository cardRepository, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService, StorageClient storageClient, OcrRequestPublisher ocrRequestPublisher) {
+    public ExpenseService(LoggedUserService loggedUserService, CardRepository cardRepository, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService,
+                          OcrAnalyzerRepository ocrAnalyzerRepository) {
         this.loggedUserService = loggedUserService;
         this.cardRepository = cardRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.expenseRepository = expenseRepository;
         this.establishmentService = establishmentService;
-        this.storageClient = storageClient;
-        this.ocrRequestPublisher = ocrRequestPublisher;
+        this.ocrAnalyzerRepository = ocrAnalyzerRepository;
     }
 
     @Transactional
@@ -75,23 +58,30 @@ public class ExpenseService {
         return ExpenseResponseDTO.fromEntity(expenseRepository.save(expense));
     }
 
-    public OcrRequestDTO insertFromUpload(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new EmptyFileException();
-        }
-        if (!ALLOWED_TYPES.contains(file.getContentType())) {
-            throw new InvalidFileTypeException(file.getContentType());
-        }
-        if (file.getSize() > MAX_SIZE) {
-            throw new FileTooLargeException(file.getSize(), MAX_SIZE);
-        }
+    public void createExpenseFromSchema(String taskId, ReceiptSchemaDTO schema) {
+        OcrAnalyzer analyzer = ocrAnalyzerRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
 
-        String taskId = String.valueOf(UUID.randomUUID());
-        String imageUrl = storageClient.upload(file);
+        UUID userId = analyzer.getUser().getId();
 
-        ocrRequestPublisher.send(new OcrMessageDTO(taskId, imageUrl));
+        Card card = cardRepository.findByLastDigitsAndUserId(schema.cardLastDigits(), userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Card not found with last digits" + schema.cardLastDigits()));
 
-        return new OcrRequestDTO(taskId, imageUrl);
+        Establishment establishment = establishmentService.findOrCreateByCnpj(schema.cnpj());
+
+        Category category = establishment.getMainActivity();
+
+        Expense expense = new Expense();
+        expense.setUser(userRepository.getReferenceById(userId));
+        expense.setCard(card);
+        expense.setEstablishment(establishment);
+        expense.setCategory(category);
+        expense.setAmount(schema.amount());
+        expense.setCurrency(schema.currency());
+        expense.setDate(schema.date());
+        expense.setPaymentMethod(schema.paymentMethod());
+
+        expenseRepository.save(expense);
     }
 
     public List<ExpenseResponseDTO> findByFilters(ExpenseFilterDTO filter) {

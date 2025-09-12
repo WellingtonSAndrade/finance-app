@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -22,7 +22,7 @@ public class Expense {
     @Column(precision = 15, scale = 2)
     private BigDecimal amount;
     private String currency;
-    private Date date;
+    private LocalDate date;
     private String paymentMethod;
     private String status;
     private String receiptPath;

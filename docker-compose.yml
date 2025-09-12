@@ -6,7 +6,7 @@ services:
     ports:
     - "5000:5000"
     volumes:
-    - ./uploads:/app/uploads
+    - ./services/finance-api/uploads:/app/uploads
 
   rabbitmq:
     image: rabbitmq:3.7.8-management

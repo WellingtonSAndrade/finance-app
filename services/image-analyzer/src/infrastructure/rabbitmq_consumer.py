@@ -46,12 +46,13 @@ class RabbitMQConsumer:
             data = json.loads(body)
             image_url = data['imageUrl']
             task_id = data['taskId']
+            user_id = data['userId']
 
             local_path = self.storage_client.download(image_url, task_id)
 
             extracted_data = self.analyzer.analyze_image(local_path)
 
-            self.producer.publish(task_id, extracted_data)
+            self.producer.publish(task_id, extracted_data, user_id)
 
             ch.basic_ack(delivery_tag=method.delivery_tag)
         except json.JSONDecodeError as e:

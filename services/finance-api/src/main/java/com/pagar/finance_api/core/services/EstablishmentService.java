@@ -33,7 +33,7 @@ public class EstablishmentService {
 
     private Establishment createEstablishment(String cnpj) {
         try {
-            ReceitaWSResponseDTO response = receitaWSClient.getCompanyByCnpj(cnpj);
+            ReceitaWSResponseDTO response = receitaWSClient.getCompanyByCnpj(cnpj.replaceAll("[./-]", ""));
 
             if (response == null) {
                 throw new ExternalApiException("Establishment not found in the external API for the CNPJ: " + cnpj);

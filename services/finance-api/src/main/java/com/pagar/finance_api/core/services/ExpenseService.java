@@ -18,29 +18,29 @@ import java.util.UUID;
 public class ExpenseService {
 
     private final LoggedUserService loggedUserService;
-    private final CardRepository cardRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
     private final EstablishmentService establishmentService;
     private final OcrAnalyzerRepository ocrAnalyzerRepository;
+    private final CardService cardService;
 
-    public ExpenseService(LoggedUserService loggedUserService, CardRepository cardRepository, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService,
-                          OcrAnalyzerRepository ocrAnalyzerRepository) {
+    public ExpenseService(LoggedUserService loggedUserService, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService,
+                          OcrAnalyzerRepository ocrAnalyzerRepository, CardService cardService) {
         this.loggedUserService = loggedUserService;
-        this.cardRepository = cardRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.expenseRepository = expenseRepository;
         this.establishmentService = establishmentService;
         this.ocrAnalyzerRepository = ocrAnalyzerRepository;
+        this.cardService = cardService;
     }
 
     @Transactional
     public ExpenseResponseDTO insert(ExpenseRequestDTO dto) {
         UUID userId = loggedUserService.getLoggedUserId();
 
-        Card card = getCard(dto.cardId(), userId);
+        Card card = cardService.findOrCreateByLastDigits(dto.cardLastDigits(), userId);
         Establishment establishment = establishmentService.findOrCreateByCnpj(dto.establishmentCnpj());
 
         Category category;
@@ -64,8 +64,7 @@ public class ExpenseService {
 
         UUID userId = analyzer.getUser().getId();
 
-        Card card = cardRepository.findByLastDigitsAndUserId(schema.cardLastDigits(), userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Card not found with last digits" + schema.cardLastDigits()));
+        Card card = cardService.findOrCreateByLastDigits(schema.cardLastDigits(), userId);
 
         Establishment establishment = establishmentService.findOrCreateByCnpj(schema.cnpj());
 
@@ -106,8 +105,8 @@ public class ExpenseService {
         if (dto.date() != null) expense.setDate(dto.date());
         if (dto.paymentMethod() != null) expense.setPaymentMethod(dto.paymentMethod());
 
-        if (dto.cardId() != null) {
-            Card card = getCard(dto.cardId(), userId);
+        if (dto.cardLastDigits() != null) {
+            Card card = cardService.findOrCreateByLastDigits(dto.cardLastDigits(), userId);
             expense.setCard(card);
         }
         if (dto.establishmentCnpj() != null) {
@@ -134,10 +133,6 @@ public class ExpenseService {
 
     private Category getCategory(UUID categoryId) {
         return categoryRepository.findById(categoryId).orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + categoryId));
-    }
-
-    private Card getCard(UUID cardId, UUID userId) {
-        return cardRepository.findByIdAndUserId(cardId, userId).orElseThrow(() -> new ResourceNotFoundException("Card not found with ID: " + cardId));
     }
 }
 

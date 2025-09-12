@@ -89,4 +89,17 @@ public class CardService {
 
         cardRepository.delete(card);
     }
+
+    @Transactional
+    public Card findOrCreateByLastDigits(String lastDigits, UUID userId) {
+        return cardRepository.findByLastDigitsAndUserId(lastDigits, userId)
+                .orElseGet(() -> createCard(lastDigits, userId));
+    }
+
+    private Card createCard(String lastDigits, UUID userId) {
+        Card card = new Card();
+        card.setLastDigits(lastDigits);
+        card.setUser(userRepository.getReferenceById(userId));
+        return cardRepository.save(card);
+    }
 }

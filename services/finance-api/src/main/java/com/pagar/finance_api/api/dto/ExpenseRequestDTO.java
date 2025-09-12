@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record ExpenseRequestDTO(UUID id, BigDecimal amount, String currency, LocalDate date, String paymentMethod, UUID cardId, String establishmentCnpj,
+public record ExpenseRequestDTO(UUID id, BigDecimal amount, String currency, LocalDate date, String paymentMethod, String cardLastDigits, String establishmentCnpj,
                                 UUID categoryId) {
     public Expense toEntity() {
         Expense expense = new Expense();

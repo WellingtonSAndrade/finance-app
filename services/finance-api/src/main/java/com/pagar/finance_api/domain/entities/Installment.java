@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Getter
@@ -15,8 +16,13 @@ public class Installment {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    private Boolean isInstallment;
-    private Integer numberInstallments;
+    private Integer total;
+    private Integer number;
     @Column(precision = 15, scale = 2)
-    private BigDecimal installmentValue;
+    private BigDecimal amount;
+    private LocalDate dueDate;
+
+    @ManyToOne
+    @JoinColumn(name = "expense_id")
+    private Expense expense;
 }

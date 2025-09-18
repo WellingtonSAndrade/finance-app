@@ -7,8 +7,7 @@ import java.time.LocalDate;
 
 public record ReceiptSchemaDTO(String cnpj, BigDecimal amount, String currency, LocalDate date,
                                @JsonProperty("payment_method") String paymentMethod,
-                               @JsonProperty("card_last_digits") String cardLastDigits, Installments installments) {
-
-    public record Installments(boolean isInstallment, int numberOfInstallments, BigDecimal installmentValue) {
-    }
+                               @JsonProperty("card_last_digits") String cardLastDigits,
+                               @JsonProperty("has_installment") boolean hasInstallment,
+                               InstallmentSchemaDTO installments) {
 }

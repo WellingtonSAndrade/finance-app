@@ -15,20 +15,18 @@ class JSONParser:
             "date": {"type": "string"},
             "payment_method": {"type": "string"},
             "card_last_digits": {"type": "string"},
+            "has_installment": {"type": "boolean"},
             "installments": {
                 "type": "object",
                 "properties": {
-                    "is_installment": {"type": "boolean"},
-                    "number_of_installments": {"type": "integer"},
-                    "installment_value": {"type": "number"}
+                    "total_installments": {"type": "integer"},
+                    "amount": {"type": "number"}
                 },
                 "required": [
-                    "is_installment",
-                    "number_of_installments",
-                    "installment_value"
+                    "total_installments",
+                    "amount"
                 ]
-            },
-            "items": {"type": "array"}
+            }
         },
         "required": [
             "cnpj",
@@ -37,8 +35,8 @@ class JSONParser:
             "date",
             "payment_method",
             "card_last_digits",
-            "installments",
-            "items"
+            "has_installment",
+            "installments"
         ]
     }
 

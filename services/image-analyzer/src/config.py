@@ -38,12 +38,11 @@ class PromptTemplate:
     "date": "",
     "payment_method": "",
     "card_last_digits": "",
+    "has_installment": false,
     "installments": {
-        "is_installment": false,
-        "number_of_installments": 0,
-        "installment_value": 0.0
-    },
-    "items": []
+        "total_installments": 0,
+        "amount": 0.0
+        }
     }
 
 
@@ -69,9 +68,6 @@ class PromptTemplate:
     - Provide the number of installments and the value of each.
     - For "cnpj":
     - Look for "CNPJ" followed by numbers in the format XX.XXX.XXX/XXXX-XX.
-    - For "items":
-    - List the purchased products or services, if present.
-    - If no items are found, return an empty list [].
     - Ignore additional fees and discounts — consider only the final amount paid.
     - Be precise and thorough — receipts may contain scattered and varied formats of information.
     Text to analyze:

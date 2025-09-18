@@ -26,6 +26,7 @@ public class Expense {
     private String paymentMethod;
     private String status;
     private String receiptPath;
+    private Boolean hasInstallment;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -50,4 +51,7 @@ public class Expense {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    @OneToMany(mappedBy = "expense")
+    private Set<Installment> installments = new HashSet<>();
 }

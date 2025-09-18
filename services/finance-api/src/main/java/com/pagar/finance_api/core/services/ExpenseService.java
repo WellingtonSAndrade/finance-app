@@ -24,9 +24,10 @@ public class ExpenseService {
     private final EstablishmentService establishmentService;
     private final OcrAnalyzerRepository ocrAnalyzerRepository;
     private final CardService cardService;
+    private final InstallmentRepository installmentRepository;
+    private final InstallmentService installmentService;
 
-    public ExpenseService(LoggedUserService loggedUserService, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService,
-                          OcrAnalyzerRepository ocrAnalyzerRepository, CardService cardService) {
+    public ExpenseService(LoggedUserService loggedUserService, CategoryRepository categoryRepository, UserRepository userRepository, ExpenseRepository expenseRepository, EstablishmentService establishmentService, OcrAnalyzerRepository ocrAnalyzerRepository, CardService cardService, InstallmentRepository installmentRepository, InstallmentService installmentService) {
         this.loggedUserService = loggedUserService;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
@@ -34,6 +35,8 @@ public class ExpenseService {
         this.establishmentService = establishmentService;
         this.ocrAnalyzerRepository = ocrAnalyzerRepository;
         this.cardService = cardService;
+        this.installmentRepository = installmentRepository;
+        this.installmentService = installmentService;
     }
 
     @Transactional
@@ -55,12 +58,20 @@ public class ExpenseService {
         expense.setEstablishment(establishment);
         expense.setCategory(category);
 
+
+        if (dto.hasInstallments()) {
+            List<Installment> installments = installmentService.generateInstallments(
+                    dto.installments().totalInstallments(), dto.installments().amount(), expense
+            );
+
+            installmentRepository.saveAll(installments);
+        }
+
         return ExpenseResponseDTO.fromEntity(expenseRepository.save(expense));
     }
 
     public void createExpenseFromSchema(String taskId, ReceiptSchemaDTO schema) {
-        OcrAnalyzer analyzer = ocrAnalyzerRepository.findById(taskId)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
+        OcrAnalyzer analyzer = ocrAnalyzerRepository.findById(taskId).orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskId));
 
         UUID userId = analyzer.getUser().getId();
 
@@ -81,17 +92,22 @@ public class ExpenseService {
         expense.setPaymentMethod(schema.paymentMethod());
 
         expenseRepository.save(expense);
+
+        if (schema.hasInstallment()) {
+            List<Installment> installments = installmentService.generateInstallments(
+                    schema.installments().totalInstallments(), schema.installments().amount(), expense
+            );
+
+            installmentRepository.saveAll(installments);
+        }
     }
 
     public List<ExpenseResponseDTO> findByFilters(ExpenseFilterDTO filter) {
         UUID userId = loggedUserService.getLoggedUserId();
 
-        return expenseRepository.findByFilter(userId,
-                filter.startDate(),
-                filter.endDate(),
-                filter.card(),
-                filter.category(),
-                filter.establishment());
+        List<Expense> expenses = expenseRepository.findByFilter(userId, filter.startDate(), filter.endDate(), filter.card(), filter.category(), filter.establishment());
+
+        return expenses.stream().map(ExpenseResponseDTO::fromEntity).toList();
     }
 
     @Transactional
@@ -125,8 +141,7 @@ public class ExpenseService {
     public void delete(UUID expenseId) {
         UUID userId = loggedUserService.getLoggedUserId();
 
-        Expense expense = expenseRepository.findByIdAndUserId(expenseId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Expense not found with ID: " + expenseId));
+        Expense expense = expenseRepository.findByIdAndUserId(expenseId, userId).orElseThrow(() -> new ResourceNotFoundException("Expense not found with ID: " + expenseId));
 
         expenseRepository.delete(expense);
     }

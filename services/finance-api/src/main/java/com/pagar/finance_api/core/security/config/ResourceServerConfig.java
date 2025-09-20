@@ -21,7 +21,7 @@ public class ResourceServerConfig {
     public SecurityFilterChain resourceServerFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/error").permitAll()
+                        .requestMatchers("/", "/login", "/error", "/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(Customizer.withDefaults())

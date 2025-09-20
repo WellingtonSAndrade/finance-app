@@ -1,18 +1,70 @@
-services:
+services: 
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.7.8-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
+    ports:
+      - "${RABBIT_PORT}:5672"
+      - 15672:15672
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  finance-api:
+    build: ./services/finance-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      SPRING_RABBITMQ_HOST: ${RABBIT_HOST}
+      SPRING_RABBITMQ_PORT: ${RABBIT_PORT}
+      SPRING_RABBITMQ_USERNAME: ${RABBIT_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBIT_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   analyzer-service:
     build: ./services/image-analyzer    
     env_file:
-    - ./services/image-analyzer/.env  
+    - .env  
     ports:
     - "5000:5000"
     volumes:
     - ./services/finance-api/uploads:/app/uploads
+    depends_on:
+      finance-api:
+        condition: service_healthy
 
-  rabbitmq:
-    image: rabbitmq:3.7.8-management
-    ports:
-      - 5672:5672
-      - 15672:15672
-    environment:
-      - RABBITMQ_DEFAULT_USER=rabbitmq
-      - RABBITMQ_DEFAULT_PASS=rabbitmq
+volumes:
+  pgdata:

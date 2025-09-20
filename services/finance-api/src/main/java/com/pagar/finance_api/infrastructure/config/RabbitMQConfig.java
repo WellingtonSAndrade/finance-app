@@ -20,8 +20,11 @@ public class RabbitMQConfig {
     @Value("${rabbitmq.exchange.name}")
     private String exchangeName;
 
-    @Value("${rabbitmq.queue.name}")
-    private String queueName;
+    @Value("${rabbitmq.request-queue.name}")
+    private String requestQueueName;
+
+    @Value("${rabbitmq.response-queue.name}")
+    private String responseQueueName;
 
     @Bean
     public Exchange imageExchange() {
@@ -34,9 +37,12 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue queue() {
-        return new Queue(queueName);
+    public Queue requestQueue() {
+        return new Queue(requestQueueName);
     }
+
+    @Bean
+    public Queue responseQueue() { return new Queue(responseQueueName); }
 
     @Bean
     public MessageConverter messageConverter() {

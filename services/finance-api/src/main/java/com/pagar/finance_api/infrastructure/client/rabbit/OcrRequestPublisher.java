@@ -10,7 +10,7 @@ public class OcrRequestPublisher {
 
     private final RabbitTemplate rabbitTemplate;
 
-    @Value("${rabbitmq.queue.name}")
+    @Value("${rabbitmq.request-queue.name}")
     private String routingKey;
 
     public OcrRequestPublisher(RabbitTemplate rabbitTemplate) {

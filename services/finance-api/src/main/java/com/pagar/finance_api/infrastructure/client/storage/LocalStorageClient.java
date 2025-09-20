@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Component
-@Profile("dev")
 public class LocalStorageClient implements StorageClient {
 
     private final Path uploadDir = Paths.get("uploads");
